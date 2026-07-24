@@ -18,6 +18,12 @@ relacionadas às heurísticas de Nielsen.
 
 > Nesta etapa não existem testes automatizados, planos, casos, scripts,
 > relatórios de teste ou relatórios de cobertura.
+>
+> Este repositório também serve como base para a geração de especificações de
+> teste funcionais por meio de prompts de análise. Um prompt estruturado foi
+> usado para inspecionar o código, identificar requisitos e regras de negócio,
+> e produzir o documento `Docs/CASOS_DE_TESTE_FUNCIONAIS.md` com casos de teste
+> manuais e uma matriz de rastreabilidade.
 
 ## 2. Tecnologias
 
