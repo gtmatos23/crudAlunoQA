@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema didático para gerenciamento de alunos de uma academia">
+    <title>Gestão de Alunos</title>
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script src="/js/alunos.js" defer></script>
+</head>
+<body>
+    <!--
+        O link de salto é a primeira opção do teclado e permite que leitores de
+        tela e pessoas com mobilidade reduzida ignorem o cabeçalho repetitivo.
+    -->
+    <a class="pular-conteudo" href="#conteudo-principal">Pular para o conteúdo principal</a>
+
+    <header class="cabecalho">
+        <div class="container cabecalho__conteudo">
+            <div>
+                <p class="cabecalho__identificacao">Academia • Gestão acadêmica</p>
+                <h1>Gestão de Alunos</h1>
+                <p class="cabecalho__subtitulo">
+                    Sistema didático para gerenciamento de alunos da academia
+                </p>
+            </div>
+            <button class="botao botao--cabecalho" id="botao-ajuda" type="button">
+                Ajuda
+            </button>
+        </div>
+    </header>
+
+    <main class="container conteudo" id="conteudo-principal" tabindex="-1">
+        <!-- Os cartões dão visibilidade imediata ao estado atual do sistema. -->
+        <section aria-labelledby="titulo-resumo">
+            <div class="titulo-secao">
+                <div>
+                    <p class="sobrelinha">Visão geral</p>
+                    <h2 id="titulo-resumo">Resumo dos alunos</h2>
+                </div>
+                <p class="atualizacao" id="texto-atualizacao">Dados atuais da academia</p>
+            </div>
+
+            <div class="resumo">
+                <article class="cartao-resumo cartao-resumo--total">
+                    <p class="cartao-resumo__titulo">Total de alunos</p>
+                    <strong class="cartao-resumo__numero" id="total-alunos">0</strong>
+                    <p class="cartao-resumo__descricao">Todos os registros cadastrados</p>
+                </article>
+                <article class="cartao-resumo cartao-resumo--ativo">
+                    <p class="cartao-resumo__titulo">Alunos ativos</p>
+                    <strong class="cartao-resumo__numero" id="total-ativos">0</strong>
+                    <p class="cartao-resumo__descricao">Matrículas em situação ativa</p>
+                </article>
+                <article class="cartao-resumo cartao-resumo--inativo">
+                    <p class="cartao-resumo__titulo">Alunos inativos</p>
+                    <strong class="cartao-resumo__numero" id="total-inativos">0</strong>
+                    <p class="cartao-resumo__descricao">Matrículas atualmente inativas</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="painel-alunos" aria-labelledby="titulo-listagem">
+            <div class="painel-alunos__cabecalho">
+                <div>
+                    <p class="sobrelinha">Cadastro</p>
+                    <h2 id="titulo-listagem">Alunos cadastrados</h2>
+                </div>
+                <button class="botao botao--primario" id="botao-novo-aluno" type="button">
+                    <span aria-hidden="true">＋</span> Novo aluno
+                </button>
+            </div>
+
+            <!-- Pesquisa e filtro operam no navegador e atualizam o contador ao digitar. -->
+            <div class="barra-ferramentas" role="search" aria-label="Pesquisar e filtrar alunos">
+                <div class="campo campo--pesquisa">
+                    <label for="pesquisa-alunos">Pesquisar alunos</label>
+                    <input
+                        id="pesquisa-alunos"
+                        type="search"
+                        placeholder="Nome, CPF ou e-mail"
+                        autocomplete="off"
+                        aria-describedby="ajuda-pesquisa"
+                    >
+                    <small id="ajuda-pesquisa">A lista é atualizada enquanto você digita.</small>
+                </div>
+                <div class="campo campo--filtro">
+                    <label for="filtro-situacao">Situação</label>
+                    <select id="filtro-situacao">
+                        <option value="todos">Todos</option>
+                        <option value="ativos">Ativos</option>
+                        <option value="inativos">Inativos</option>
+                    </select>
+                </div>
+                <p class="contador-resultados" id="contador-resultados" aria-live="polite">
+                    0 resultados
+                </p>
+            </div>
+
+            <!-- Estado inicial explícito: a tabela nunca parece vazia por engano. -->
+            <div class="estado-listagem" id="estado-listagem" role="status">
+                <span class="carregador" aria-hidden="true"></span>
+                <div>
+                    <strong>Carregando alunos...</strong>
+                    <p>Aguarde enquanto buscamos os dados mais recentes.</p>
+                </div>
+            </div>
+
+            <div class="tabela-container" id="tabela-container" hidden>
+                <table>
+                    <caption class="visualmente-oculto">
+                        Lista de alunos com identificação, contato, plano, situação e ações
+                    </caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Nome</th>
+                            <th scope="col">CPF</th>
+                            <th scope="col">E-mail</th>
+                            <th scope="col">Plano</th>
+                            <th scope="col">Situação</th>
+                            <th scope="col">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-tabela"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!--
+        O dialog nativo fornece foco modal, fechamento por Esc e semântica
+        acessível sem bibliotecas externas.
+    -->
+    <dialog class="dialogo dialogo--formulario" id="dialogo-aluno" aria-labelledby="titulo-dialogo-aluno">
+        <form id="formulario-aluno" novalidate>
+            <div class="dialogo__cabecalho">
+                <div>
+                    <p class="sobrelinha">Dados da matrícula</p>
+                    <h2 id="titulo-dialogo-aluno">Cadastrar aluno</h2>
+                    <p>Campos marcados com <span aria-hidden="true">*</span><span class="visualmente-oculto">asterisco</span> são obrigatórios.</p>
+                </div>
+                <button class="botao-icone" type="button" data-fechar-dialogo="dialogo-aluno" aria-label="Fechar formulário">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+
+            <div class="dialogo__corpo grade-formulario">
+                <div class="campo campo--largura-total">
+                    <label for="nome-completo">Nome completo <span class="obrigatorio" aria-hidden="true">*</span></label>
+                    <input
+                        id="nome-completo"
+                        name="nomeCompleto"
+                        type="text"
+                        minlength="3"
+                        maxlength="100"
+                        autocomplete="name"
+                        required
+                        aria-describedby="ajuda-nome erro-nomeCompleto"
+                    >
+                    <small id="ajuda-nome">Informe nome e sobrenome, entre 3 e 100 caracteres.</small>
+                    <span class="erro-campo" id="erro-nomeCompleto"></span>
+                </div>
+
+                <div class="campo">
+                    <label for="cpf">CPF <span class="obrigatorio" aria-hidden="true">*</span></label>
+                    <input
+                        id="cpf"
+                        name="cpf"
+                        type="text"
+                        inputmode="numeric"
+                        maxlength="14"
+                        placeholder="000.000.000-00"
+                        autocomplete="off"
+                        required
+                        aria-describedby="ajuda-cpf erro-cpf"
+                    >
+                    <small id="ajuda-cpf">Digite os 11 números. A pontuação é adicionada automaticamente.</small>
+                    <span class="erro-campo" id="erro-cpf"></span>
+                </div>
+
+                <div class="campo">
+                    <label for="email">E-mail <span class="obrigatorio" aria-hidden="true">*</span></label>
+                    <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        maxlength="254"
+                        placeholder="aluno@exemplo.com"
+                        autocomplete="email"
+                        required
+                        aria-describedby="erro-email"
+                    >
+                    <span class="erro-campo" id="erro-email"></span>
+                </div>
+
+                <div class="campo">
+                    <label for="telefone">Telefone</label>
+                    <input
+                        id="telefone"
+                        name="telefone"
+                        type="tel"
+                        inputmode="numeric"
+                        maxlength="15"
+                        placeholder="(00) 00000-0000"
+                        autocomplete="tel"
+                        aria-describedby="ajuda-telefone erro-telefone"
+                    >
+                    <small id="ajuda-telefone">Opcional. Informe DDD e número.</small>
+                    <span class="erro-campo" id="erro-telefone"></span>
+                </div>
+
+                <div class="campo">
+                    <label for="data-nascimento">Data de nascimento <span class="obrigatorio" aria-hidden="true">*</span></label>
+                    <input
+                        id="data-nascimento"
+                        name="dataNascimento"
+                        type="date"
+                        required
+                        aria-describedby="ajuda-nascimento erro-dataNascimento"
+                    >
+                    <small id="ajuda-nascimento">Deve ser anterior à data atual.</small>
+                    <span class="erro-campo" id="erro-dataNascimento"></span>
+                </div>
+
+                <div class="campo">
+                    <label for="plano">Plano <span class="obrigatorio" aria-hidden="true">*</span></label>
+                    <select id="plano" name="plano" required aria-describedby="erro-plano">
+                        <option value="">Selecione um plano</option>
+                        <option value="MENSAL">Mensal</option>
+                        <option value="TRIMESTRAL">Trimestral</option>
+                        <option value="ANUAL">Anual</option>
+                    </select>
+                    <span class="erro-campo" id="erro-plano"></span>
+                </div>
+
+                <div class="campo">
+                    <label for="data-matricula">Data de matrícula</label>
+                    <input
+                        id="data-matricula"
+                        name="dataMatricula"
+                        type="date"
+                        aria-describedby="ajuda-matricula erro-dataMatricula"
+                    >
+                    <small id="ajuda-matricula">Se ficar vazia no cadastro, será usada a data atual.</small>
+                    <span class="erro-campo" id="erro-dataMatricula"></span>
+                </div>
+
+                <div class="campo campo--largura-total situacao-formulario">
+                    <div>
+                        <span class="rotulo-grupo">Situação da matrícula</span>
+                        <small>Desmarque para registrar o aluno como inativo.</small>
+                    </div>
+                    <label class="controle-situacao" for="ativo">
+                        <input id="ativo" name="ativo" type="checkbox" checked>
+                        <span id="texto-situacao-formulario">Aluno ativo</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="dialogo__rodape">
+                <button class="botao botao--neutro" type="button" data-fechar-dialogo="dialogo-aluno">
+                    Cancelar
+                </button>
+                <button class="botao botao--primario" id="botao-salvar" type="submit">
+                    Salvar aluno
+                </button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog class="dialogo dialogo--pequeno" id="dialogo-exclusao" aria-labelledby="titulo-dialogo-exclusao">
+        <div class="dialogo__cabecalho">
+            <div>
+                <p class="sobrelinha sobrelinha--perigo">Ação permanente</p>
+                <h2 id="titulo-dialogo-exclusao">Excluir aluno</h2>
+            </div>
+            <button class="botao-icone" type="button" data-fechar-dialogo="dialogo-exclusao" aria-label="Fechar confirmação">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+        <div class="dialogo__corpo">
+            <p class="mensagem-confirmacao" id="mensagem-exclusao"></p>
+            <p>Essa ação removerá o registro da academia e não poderá ser desfeita.</p>
+        </div>
+        <div class="dialogo__rodape">
+            <button class="botao botao--neutro" type="button" data-fechar-dialogo="dialogo-exclusao">
+                Cancelar
+            </button>
+            <button class="botao botao--perigo" id="botao-confirmar-exclusao" type="button">
+                Excluir aluno
+            </button>
+        </div>
+    </dialog>
+
+    <dialog class="dialogo dialogo--pequeno" id="dialogo-ajuda" aria-labelledby="titulo-dialogo-ajuda">
+        <div class="dialogo__cabecalho">
+            <div>
+                <p class="sobrelinha">Orientação</p>
+                <h2 id="titulo-dialogo-ajuda">Como usar o sistema</h2>
+            </div>
+            <button class="botao-icone" type="button" data-fechar-dialogo="dialogo-ajuda" aria-label="Fechar ajuda">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+        <div class="dialogo__corpo ajuda">
+            <p>Este sistema organiza as matrículas dos alunos da academia.</p>
+            <ul>
+                <li><strong>Cadastrar:</strong> use “Novo aluno”, preencha os campos obrigatórios e salve.</li>
+                <li><strong>Editar:</strong> escolha “Editar” na linha do aluno e atualize os dados.</li>
+                <li><strong>Excluir:</strong> escolha “Excluir” e confirme a remoção no diálogo.</li>
+                <li><strong>Encontrar:</strong> pesquise por nome, CPF ou e-mail e combine com o filtro de situação.</li>
+                <li><strong>Obrigatórios:</strong> campos com asterisco precisam ser preenchidos para salvar.</li>
+            </ul>
+        </div>
+        <div class="dialogo__rodape">
+            <button class="botao botao--primario" type="button" data-fechar-dialogo="dialogo-ajuda">
+                Fechar ajuda
+            </button>
+        </div>
+    </dialog>
+
+    <!-- A região aria-live anuncia retornos sem deslocar o foco atual. -->
+    <section
+        class="notificacoes"
+        id="notificacoes"
+        aria-live="polite"
+        aria-label="Mensagens do sistema"
+    ></section>
+</body>
+</html>

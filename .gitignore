@@ -1,0 +1,16 @@
+# Arquivos gerados pelo Maven
+target/
+
+# Configurações locais de IDEs
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+
+# Arquivos do sistema operacional
+.DS_Store
+
+# Logs locais
+*.log
